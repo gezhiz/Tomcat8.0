@@ -144,7 +144,7 @@ public abstract class LifecycleBase implements Lifecycle {
         setStateInternal(LifecycleState.STARTING_PREP, null, false);
 
         try {
-            startInternal();
+            startInternal();//交给子类去实现的方法
         } catch (Throwable t) {
             // This is an 'uncontrolled' failure so put the component into the
             // FAILED state and throw an exception.

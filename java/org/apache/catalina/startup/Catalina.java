@@ -161,7 +161,7 @@ public class Catalina {
         if (parentClassLoader != null) {
             return (parentClassLoader);
         }
-        return ClassLoader.getSystemClassLoader();
+        return ClassLoader.getSystemClassLoader();//默认使用系统类加载器
     }
 
     public void setServer(Server server) {

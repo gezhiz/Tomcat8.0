@@ -66,7 +66,7 @@ public final class Bootstrap {
         String userDir = System.getProperty("user.dir");
 
         // Home first
-        String home = System.getProperty(Globals.CATALINA_HOME_PROP);
+        String home = System.getProperty(Globals.CATALINA_HOME_PROP);//catalina.home路径
         File homeFile = null;
 
         if (home != null) {
