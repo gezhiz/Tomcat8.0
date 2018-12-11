@@ -42,6 +42,7 @@ public class ConnectorCreateRule extends Rule {
 
 
     /**
+     * 查看Connector类的构造函数会发现，构造过程中需要用到connector标签上的属性
      * Process the beginning of this element.
      *
      * @param namespace the namespace URI of the matching element, or an
@@ -54,7 +55,7 @@ public class ConnectorCreateRule extends Rule {
     @Override
     public void begin(String namespace, String name, Attributes attributes)
             throws Exception {
-        Service svc = (Service)digester.peek();
+        Service svc = (Service)digester.peek();//返回栈顶的对象
         Executor ex = null;
         if ( attributes.getValue("executor")!=null ) {
             ex = svc.getExecutor(attributes.getValue("executor"));

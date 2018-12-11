@@ -260,6 +260,7 @@ public class Catalina {
 
 
     /**
+     * 配置Digester的模式：从这儿可以看到Tomcat启动的默认的组件的class
      * Create and configure the Digester we will be using for startup.
      */
     protected Digester createStartDigester() {
@@ -276,17 +277,23 @@ public class Catalina {
         digester.setUseContextClassLoader(true);
 
         // Configure the actions we will be using
+        //模式注解：遇到server标签时创建一个server对象
+        //addObjectCreate方法会创建对象，然后入栈,处理完成后会出栈
         digester.addObjectCreate("Server",
                                  "org.apache.catalina.core.StandardServer",
                                  "className");
+        //模式注解：为创建的对象（server）设置属性:此模式会遍历Server标签下的所有属性（如：port）,然后调用set方法(setPort)为server对象设置属性
         digester.addSetProperties("Server");
+        //模式注解：创建对象之间的关系，调用Catalina的setServer方法
         digester.addSetNext("Server",
                             "setServer",
                             "org.apache.catalina.Server");
+        //解析完成之后，ObjectCreateRule规则的rule方法最后执行，遇到</Server>时，让server出栈
 
         digester.addObjectCreate("Server/GlobalNamingResources",
                                  "org.apache.catalina.deploy.NamingResourcesImpl");
         digester.addSetProperties("Server/GlobalNamingResources");
+        //创建GlobalNamingResources对象后，调用上一个对象（server）的setGlobalNamingResources方法设置属性
         digester.addSetNext("Server/GlobalNamingResources",
                             "setGlobalNamingResources",
                             "org.apache.catalina.deploy.NamingResourcesImpl");
@@ -327,7 +334,7 @@ public class Catalina {
 
 
         digester.addRule("Server/Service/Connector",
-                         new ConnectorCreateRule());
+                         new ConnectorCreateRule());//使用ConnectorCreateRule的规则创建Connector对象
         digester.addRule("Server/Service/Connector",
                          new SetAllPropertiesRule(new String[]{"executor"}));
         digester.addSetNext("Server/Service/Connector",
@@ -472,6 +479,7 @@ public class Catalina {
 
 
     /**
+     * 根据server.xml的配置加载server组件
      * Start a new server instance.
      */
     public void load() {
@@ -548,8 +556,8 @@ public class Catalina {
 
             try {
                 inputSource.setByteStream(inputStream);
-                digester.push(this);
-                digester.parse(inputSource);
+                digester.push(this);//先把Catalina对象放入栈中
+                digester.parse(inputSource);//接着解析server.xml文件
             } catch (SAXParseException spe) {
                 log.warn("Catalina.start using " + getConfigFile() + ": " +
                         spe.getMessage());
@@ -614,7 +622,7 @@ public class Catalina {
     public void start() {
 
         if (getServer() == null) {
-            load();
+            load();//如果没有加载server，则加载server.初始化
         }
 
         if (getServer() == null) {

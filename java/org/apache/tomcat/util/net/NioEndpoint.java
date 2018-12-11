@@ -63,9 +63,9 @@ import org.apache.tomcat.util.net.jsse.NioX509KeyManager;
 /**
  * NIO tailored thread pool, providing the following services:
  * <ul>
- * <li>Socket acceptor thread</li>
- * <li>Socket poller thread</li>
- * <li>Worker threads pool</li>
+ * <li>Socket acceptor thread</li>接受socket
+ * <li>Socket poller thread</li>socket轮询
+ * <li>Worker threads pool</li>工作线程池
  * </ul>
  *
  * When switching to Java 5, there's an opportunity to use the virtual
@@ -208,7 +208,7 @@ public class NioEndpoint extends AbstractEndpoint<NioChannel> {
     /**
      * Poller thread count.
      */
-    private int pollerThreadCount = Math.min(2,Runtime.getRuntime().availableProcessors());
+    private int pollerThreadCount = Math.min(2,Runtime.getRuntime().availableProcessors());//默认轮询的线程数为2，如果cpu可用线程数为1则使用1
     public void setPollerThreadCount(int pollerThreadCount) { this.pollerThreadCount = pollerThreadCount; }
     public int getPollerThreadCount() { return pollerThreadCount; }
 
@@ -340,12 +340,12 @@ public class NioEndpoint extends AbstractEndpoint<NioChannel> {
 
 
     /**
-     * Initialize the endpoint.
+     * Initialize the endpoint.基类AbstractEndpoint的init方法中调用了bind方法
      */
     @Override
     public void bind() throws Exception {
 
-        serverSock = ServerSocketChannel.open();
+        serverSock = ServerSocketChannel.open();//打开一个nio的socket通道
         socketProperties.setProperties(serverSock.socket());
         InetSocketAddress addr = (getAddress()!=null?new InetSocketAddress(getAddress(),getPort()):new InetSocketAddress(getPort()));
         serverSock.socket().bind(addr,getBacklog());
@@ -361,7 +361,7 @@ public class NioEndpoint extends AbstractEndpoint<NioChannel> {
             //minimum one poller thread
             pollerThreadCount = 1;
         }
-        stopLatch = new CountDownLatch(pollerThreadCount);
+        stopLatch = new CountDownLatch(pollerThreadCount);//信号量：标记轮询线程数量
 
         // Initialize SSL if needed
         if (isSSLEnabled()) {
@@ -417,20 +417,22 @@ public class NioEndpoint extends AbstractEndpoint<NioChannel> {
             processorCache = new SynchronizedStack<>(SynchronizedStack.DEFAULT_SIZE,
                     socketProperties.getProcessorCache());
             eventCache = new SynchronizedStack<>(SynchronizedStack.DEFAULT_SIZE,
-                            socketProperties.getEventCache());
+                            socketProperties.getEventCache());//事件列表
             nioChannels = new SynchronizedStack<>(SynchronizedStack.DEFAULT_SIZE,
-                    socketProperties.getBufferPool());
+                    socketProperties.getBufferPool());//通道列表
 
-            // Create worker collection
+            // Create worker collection 如果Connector启动时未配置线程池，则使用默认线程池
             if ( getExecutor() == null ) {
-                createExecutor();
+                createExecutor();//创建工作线程池,这个线程池可以接受很多的任务
             }
 
             initializeConnectionLatch();
 
-            // Start poller threads
+            // Start poller threads 启动轮询线程 每一个poller线程内部都维护了一个事件队列，轮询处理这个事件队列，acceptor线程负责向poller线程中添加事件
             pollers = new Poller[getPollerThreadCount()];
             for (int i=0; i<pollers.length; i++) {
+//                The background thread that listens for incoming TCP/IP connections and
+//                        hands them off to an appropriate processor.
                 pollers[i] = new Poller();
                 Thread pollerThread = new Thread(pollers[i], getName() + "-ClientPoller-"+i);
                 pollerThread.setPriority(threadPriority);
@@ -438,7 +440,9 @@ public class NioEndpoint extends AbstractEndpoint<NioChannel> {
                 pollerThread.start();
             }
 
-            startAcceptorThreads();
+//            The background thread that listens for incoming TCP/IP connections and
+//                     hands them off to an appropriate processor.
+            startAcceptorThreads();//启动接受线程，这些线程用来接受socket请求：serverSock.accept();
         }
     }
 
@@ -705,7 +709,7 @@ public class NioEndpoint extends AbstractEndpoint<NioChannel> {
                     // setSocketOptions() will add channel to the poller
                     // if successful
                     if (running && !paused) {
-                        if (!setSocketOptions(socket)) {
+                        if (!setSocketOptions(socket)) {//把socket注册给poll线程处理
                             countDownConnection();
                             closeSocket(socket);
                         }
@@ -835,7 +839,7 @@ public class NioEndpoint extends AbstractEndpoint<NioChannel> {
     }
 
     /**
-     * Poller class.
+     * Poller class.轮询线程
      */
     public class Poller implements Runnable {
 
@@ -907,6 +911,7 @@ public class NioEndpoint extends AbstractEndpoint<NioChannel> {
         }
 
         /**
+         * 处理事件队列的时间
          * Processes events in the event queue of the Poller.
          *
          * @return <code>true</code> if some events were processed,
@@ -919,7 +924,7 @@ public class NioEndpoint extends AbstractEndpoint<NioChannel> {
             while ( (pe = events.poll()) != null ) {
                 result = true;
                 try {
-                    pe.run();
+                    pe.run();//执行事件的run方法
                     pe.reset();
                     if (running && !paused) {
                         eventCache.push(pe);
@@ -948,7 +953,7 @@ public class NioEndpoint extends AbstractEndpoint<NioChannel> {
             ka.interestOps(SelectionKey.OP_READ);//this is what OP_REGISTER turns into.
             if ( r==null) r = new PollerEvent(socket,ka,OP_REGISTER);
             else r.reset(socket,ka,OP_REGISTER);
-            addEvent(r);
+            addEvent(r);//添加一个事件，Poll线程的循环中一直在处理此事件
         }
 
         public KeyAttachment cancelledKey(SelectionKey key, SocketStatus status) {

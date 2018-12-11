@@ -414,7 +414,7 @@ public abstract class AbstractProtocol<S> implements ProtocolHandler,
 
     // ------------------------------------------------------- Lifecycle methods
 
-    /*
+    /* abstract类的套路：基类负责写基础实现并把基础和通用（例如NioEndpoint）实现封装起来，子类负责特殊实现和特殊实现的配置信息
      * NOTE: There is no maintenance of state or checking for valid transitions
      * within this class. It is expected that the connector will maintain state
      * and prevent invalid state transitions.
@@ -456,7 +456,7 @@ public abstract class AbstractProtocol<S> implements ProtocolHandler,
         endpoint.setName(endpointName.substring(1, endpointName.length()-1));
 
         try {
-            endpoint.init();
+            endpoint.init();//初始化socket和工作线程，打开nio的socket通道
         } catch (Exception ex) {
             getLog().error(sm.getString("abstractProtocolHandler.initError",
                     getName()), ex);

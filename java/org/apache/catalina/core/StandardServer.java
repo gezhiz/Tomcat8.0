@@ -814,6 +814,7 @@ public final class StandardServer extends LifecycleMBeanBase implements Server {
     }
 
     /**
+     * 初始化与server直接相关的所有组件
      * Invoke a pre-startup initialization. This is used to allow connectors
      * to bind to restricted ports under Unix operating environments.
      */
@@ -866,7 +867,7 @@ public final class StandardServer extends LifecycleMBeanBase implements Server {
         }
         // Initialize our defined Services
         for (int i = 0; i < services.length; i++) {
-            services[i].init();
+            services[i].init();//初始化所有的service
         }
     }
 

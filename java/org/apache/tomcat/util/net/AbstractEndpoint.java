@@ -579,8 +579,10 @@ public abstract class AbstractEndpoint<S> {
 
     public void createExecutor() {
         internalExecutor = true;
-        TaskQueue taskqueue = new TaskQueue();
+        TaskQueue taskqueue = new TaskQueue();//工作队列，等待队列
+        //线程创建工厂
         TaskThreadFactory tf = new TaskThreadFactory(getName() + "-exec-", daemon, getThreadPriority());
+        //默认：最大线程数getMaxThreads=200，初始核心线程数getMinSpareThreads=10
         executor = new ThreadPoolExecutor(getMinSpareThreads(), getMaxThreads(), 60, TimeUnit.SECONDS,taskqueue, tf);
         taskqueue.setParent( (ThreadPoolExecutor) executor);
     }

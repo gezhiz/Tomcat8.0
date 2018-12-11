@@ -62,8 +62,9 @@ public class Connector extends LifecycleMBeanBase  {
         this(null);
     }
 
+    //Connector类更像是一个负责配置协议处理器的类，请求的处理逻辑主要交给ProtocolHandler类的接口
     public Connector(String protocol) {
-        setProtocol(protocol);
+        setProtocol(protocol);//在初始化的时候已经确定了使用哪个协议处理器
         // Instantiate protocol handler
         ProtocolHandler p = null;
         try {
@@ -561,11 +562,12 @@ public class Connector extends LifecycleMBeanBase  {
      */
     public void setProtocol(String protocol) {
 
+        //Apr:服务器之间的交互
         if (AprLifecycleListener.isAprAvailable()) {
             if ("HTTP/1.1".equals(protocol)) {
                 setProtocolHandlerClassName
                     ("org.apache.coyote.http11.Http11AprProtocol");
-            } else if ("AJP/1.3".equals(protocol)) {
+            } else if ("AJP/1.3".equals(protocol)) {//ajp协议，是一种二进制协议；Tomcat用来与其他http服务器数据交互是采用
                 setProtocolHandlerClassName
                     ("org.apache.coyote.ajp.AjpAprProtocol");
             } else if (protocol != null) {
@@ -582,7 +584,7 @@ public class Connector extends LifecycleMBeanBase  {
                 setProtocolHandlerClassName
                     ("org.apache.coyote.ajp.AjpNioProtocol");
             } else if (protocol != null) {
-                setProtocolHandlerClassName(protocol);
+                setProtocolHandlerClassName(protocol);//自定义协议处理器
             }
         }
 
@@ -957,7 +959,7 @@ public class Connector extends LifecycleMBeanBase  {
         }
 
         try {
-            protocolHandler.init();
+            protocolHandler.init();//初始化协议处理器
         } catch (Exception e) {
             throw new LifecycleException
                 (sm.getString

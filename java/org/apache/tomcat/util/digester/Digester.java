@@ -602,7 +602,7 @@ public class Digester extends DefaultHandler2 {
 
         // Create a new parser
         try {
-            parser = getFactory().newSAXParser();
+            parser = getFactory().newSAXParser();//使用sax解析
         } catch (Exception e) {
             log.error("Digester.getParser: ", e);
             return (null);
@@ -793,7 +793,7 @@ public class Digester extends DefaultHandler2 {
         }
 
         reader.setDTDHandler(this);
-        reader.setContentHandler(this);
+        reader.setContentHandler(this);//使用当前类作为解析处理器
 
         if (entityResolver == null){
             reader.setEntityResolver(this);
@@ -1117,6 +1117,7 @@ public class Digester extends DefaultHandler2 {
 
 
     /**
+     * 遇到一个标签时的处理
      * Process notification of the start of an XML element being reached.
      *
      * @param namespaceURI The Namespace URI, or the empty string if the element
