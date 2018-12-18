@@ -24,6 +24,7 @@ import org.apache.juli.logging.Log;
 import org.apache.juli.logging.LogFactory;
 
 /**
+ * 共享闭锁
  * Shared latch that allows the latch to be acquired a limited number of times
  * after which all subsequent requests to acquire the latch will be placed in a
  * FIFO queue until one of the shares is returned.
@@ -58,8 +59,8 @@ public class LimitLatch {
     }
 
     private final Sync sync;
-    private final AtomicLong count;
-    private volatile long limit;
+    private final AtomicLong count;//使用AtomicLong记录当前信号量（当前连接数量）
+    private volatile long limit;//信号量支持最大值，用来控制共享锁最大共享量
     private volatile boolean released = false;
 
     /**

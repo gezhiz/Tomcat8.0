@@ -216,7 +216,7 @@ public abstract class AbstractEndpoint<S> {
     /**
      * Acceptor thread count.
      */
-    protected int acceptorThreadCount = 0;
+    protected int acceptorThreadCount = 0;//接受socket请求的accept线程的数量
 
     public void setAcceptorThreadCount(int acceptorThreadCount) {
         this.acceptorThreadCount = acceptorThreadCount;
@@ -234,7 +234,7 @@ public abstract class AbstractEndpoint<S> {
     public int getAcceptorThreadPriority() { return acceptorThreadPriority; }
 
 
-    private int maxConnections = 10000;
+    private int maxConnections = 10000;//当连接数超过maxConnections时，accept线程被阻塞
     public void setMaxConnections(int maxCon) {
         this.maxConnections = maxCon;
         LimitLatch latch = this.connectionLimitLatch;
@@ -768,6 +768,7 @@ public abstract class AbstractEndpoint<S> {
         startInternal();
     }
 
+    //启动acceptor线程
     protected final void startAcceptorThreads() {
         int count = getAcceptorThreadCount();
         acceptors = new Acceptor[count];
@@ -848,6 +849,7 @@ public abstract class AbstractEndpoint<S> {
         connectionLimitLatch = null;
     }
 
+    //闭锁+1，或者等待其他连接数释放，用来控制总的连接数量
     protected void countUpOrAwaitConnection() throws InterruptedException {
         if (maxConnections==-1) return;
         LimitLatch latch = connectionLimitLatch;

@@ -427,7 +427,7 @@ public class NioEndpoint extends AbstractEndpoint<NioChannel> {
                 createExecutor();//创建工作线程池,这个线程池可以接受很多的任务
             }
 
-            initializeConnectionLatch();
+            initializeConnectionLatch();//初始化闭锁，控制总连接数量
 
             // Start poller threads
             // 启动轮询线程 每一个poller线程内部都维护了一个事件队列，轮询处理这个事件队列
@@ -692,7 +692,7 @@ public class NioEndpoint extends AbstractEndpoint<NioChannel> {
 
                 try {
                     //if we have reached max connections, wait
-                    countUpOrAwaitConnection();
+                    countUpOrAwaitConnection();//accept被调用之前判定当前连接数量是否到达最大值，是则等待连接被释放
 
                     SocketChannel socket = null;
                     try {
