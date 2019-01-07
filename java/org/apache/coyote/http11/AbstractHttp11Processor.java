@@ -984,8 +984,8 @@ public abstract class AbstractHttp11Processor<S> extends AbstractProcessor<S> {
 
         // Setting up the I/O
         setSocketWrapper(socketWrapper);
-        getInputBuffer().init(socketWrapper, endpoint);
-        getOutputBuffer().init(socketWrapper, endpoint);
+        getInputBuffer().init(socketWrapper, endpoint);//初始化输入缓冲区
+        getOutputBuffer().init(socketWrapper, endpoint);//初始化输出缓冲区
 
         // Flags
         keepAlive = true;
@@ -1010,8 +1010,8 @@ public abstract class AbstractHttp11Processor<S> extends AbstractProcessor<S> {
             try {
                 setRequestLineReadTimeout();
 
-                if (!getInputBuffer().parseRequestLine(keptAlive)) {
-                    if (handleIncompleteRequestLineRead()) {
+                if (!getInputBuffer().parseRequestLine(keptAlive)) {//解析请求方式
+                    if (handleIncompleteRequestLineRead()) {//处理不完整的请求方式
                         break;
                     }
                 }
@@ -1025,7 +1025,7 @@ public abstract class AbstractHttp11Processor<S> extends AbstractProcessor<S> {
                     // Set this every time in case limit has been changed via JMX
                     request.getMimeHeaders().setLimit(endpoint.getMaxHeaderCount());
                     // Currently only NIO will ever return false here
-                    if (!getInputBuffer().parseHeaders()) {
+                    if (!getInputBuffer().parseHeaders()) {//解析请求头
                         // We've read part of the request, don't recycle it
                         // instead associate it with the socket
                         openSocket = true;
@@ -1096,7 +1096,7 @@ public abstract class AbstractHttp11Processor<S> extends AbstractProcessor<S> {
             if (!getErrorState().isError()) {
                 try {
                     rp.setStage(org.apache.coyote.Constants.STAGE_SERVICE);
-                    getAdapter().service(request, response);
+                    getAdapter().service(request, response);//调用客户(servlet)代码  adapter的初始化在Connector.initInternal()中，新建了一个CoyoteAdapter
                     // Handle when the response was committed before a serious
                     // error occurred.  Throwing a ServletException should both
                     // set the status to 500 and set the errorException.
@@ -1235,7 +1235,7 @@ public abstract class AbstractHttp11Processor<S> extends AbstractProcessor<S> {
         if (endpoint.isSSLEnabled()) {
             request.scheme().setString("https");
         }
-        MessageBytes protocolMB = request.protocol();
+        MessageBytes protocolMB = request.protocol();//请求协议
         if (protocolMB.equals(Constants.HTTP_11)) {
             http11 = true;
             protocolMB.setString(Constants.HTTP_11);
@@ -1260,14 +1260,14 @@ public abstract class AbstractHttp11Processor<S> extends AbstractProcessor<S> {
             }
         }
 
-        MessageBytes methodMB = request.method();
+        MessageBytes methodMB = request.method();//请求方式
         if (methodMB.equals(Constants.GET)) {
             methodMB.setString(Constants.GET);
         } else if (methodMB.equals(Constants.POST)) {
             methodMB.setString(Constants.POST);
         }
 
-        MimeHeaders headers = request.getMimeHeaders();
+        MimeHeaders headers = request.getMimeHeaders();//MIME类型的请求头
 
         // Check connection header
         MessageBytes connectionValueMB = headers.getValue(Constants.CONNECTION);

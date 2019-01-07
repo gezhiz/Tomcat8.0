@@ -413,7 +413,7 @@ public abstract class AbstractEndpoint<S> {
                 return -1;
             }
         } else {
-            return maxThreads;
+            return maxThreads;//默认200
         }
     }
 
@@ -582,7 +582,7 @@ public abstract class AbstractEndpoint<S> {
         TaskQueue taskqueue = new TaskQueue();//工作队列，等待队列
         //线程创建工厂
         TaskThreadFactory tf = new TaskThreadFactory(getName() + "-exec-", daemon, getThreadPriority());
-        //默认：最大线程数getMaxThreads=200，初始核心线程数getMinSpareThreads=10
+        //默认：初始核心线程数getMinSpareThreads=10，最大线程数getMaxThreads=200
         executor = new ThreadPoolExecutor(getMinSpareThreads(), getMaxThreads(), 60, TimeUnit.SECONDS,taskqueue, tf);
         taskqueue.setParent( (ThreadPoolExecutor) executor);
     }

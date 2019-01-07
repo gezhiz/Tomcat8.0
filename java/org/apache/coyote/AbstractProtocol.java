@@ -603,7 +603,7 @@ public abstract class AbstractProtocol<S> implements ProtocolHandler,
                 return SocketState.CLOSED;
             }
 
-            Processor<S> processor = connections.get(socket);
+            Processor<S> processor = connections.get(socket);//先查看缓存中是否已经有了相应的socket
             if (status == SocketStatus.DISCONNECT && processor == null) {
                 // Nothing to do. Endpoint requested a close and there is no
                 // longer a processor associated with this socket.
@@ -615,10 +615,10 @@ public abstract class AbstractProtocol<S> implements ProtocolHandler,
 
             try {
                 if (processor == null) {
-                    processor = recycledProcessors.pop();
+                    processor = recycledProcessors.pop();//利用对象池的processor,
                 }
                 if (processor == null) {
-                    processor = createProcessor();
+                    processor = createProcessor();//栈中无processor，创建新的
                 }
 
                 initSsl(wrapper, processor);

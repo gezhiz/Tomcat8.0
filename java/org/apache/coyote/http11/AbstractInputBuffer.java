@@ -115,17 +115,19 @@ public abstract class AbstractInputBuffer<S> implements InputBuffer{
     /**
      * Pointer to the current read buffer.
      */
-    protected byte[] buf;
+    protected byte[] buf;//记录当前已经读取到的字节
 
 
     /**
      * Last valid byte.
+     * 上一次读取到的有效字节的位置
      */
     protected int lastValid;
 
 
     /**
      * Position in the buffer.
+     * buf数组中的游标位置
      */
     protected int pos;
 

@@ -102,7 +102,7 @@ public abstract class AbstractNioInputBuffer<S> extends AbstractInputBuffer<S> {
      * Parsing state - used for non blocking parsing so that
      * when more data arrives, we can pick up where we left off.
      */
-    private boolean parsingRequestLine;
+    private boolean parsingRequestLine;//标记是否需要解析请求行，在构造函数中初始化为true
     private int parsingRequestLinePhase = 0;
     private boolean parsingRequestLineEol = false;
     private int parsingRequestLineStart = 0;
@@ -140,6 +140,8 @@ public abstract class AbstractNioInputBuffer<S> extends AbstractInputBuffer<S> {
 
 
     /**
+     * 当前的请求解析完毕
+     * 注意：当前请求的所有字节都解析完毕。这个方法仅仅重置了所有的标志，以便解析下一个http请求
      * End processing of current HTTP request.
      * Note: All bytes of the current request should have been already
      * consumed. This method only resets all the pointers so that we are ready
@@ -173,10 +175,10 @@ public abstract class AbstractNioInputBuffer<S> extends AbstractInputBuffer<S> {
         throws IOException {
 
         //check state
-        if ( !parsingRequestLine ) return true;
+        if ( !parsingRequestLine ) return true;//检车请求行解析状态，保证只解析一次
         //
         // Skipping blank lines
-        //
+        //parsingRequestLinePhase用来标记：正在解析请求行的段落数，让pos一只跳过无效数据
         if ( parsingRequestLinePhase < 2 ) {
             byte chr = 0;
             do {
@@ -186,8 +188,9 @@ public abstract class AbstractNioInputBuffer<S> extends AbstractInputBuffer<S> {
                     if (useAvailableDataOnly) {
                         return false;
                     }
-                    // Do a simple read with a short timeout
+                    // Do a simple read with a short timeout 读取数据
                     if (!fill(false)) {
+                        //未读取到数据直接返回失败
                         // A read is pending, so no longer in initial state
                         parsingRequestLinePhase = 1;
                         return false;
@@ -196,11 +199,12 @@ public abstract class AbstractNioInputBuffer<S> extends AbstractInputBuffer<S> {
                 // Set the start time once we start reading data (even if it is
                 // just skipping blank lines)
                 if (request.getStartTime() < 0) {
-                    request.setStartTime(System.currentTimeMillis());
+                    request.setStartTime(System.currentTimeMillis());//标记开始解析请求的时间
                 }
-                chr = buf[pos++];
-            } while ((chr == Constants.CR) || (chr == Constants.LF));
+                chr = buf[pos++];//获取读取到的第一个字节
+            } while ((chr == Constants.CR) || (chr == Constants.LF));//跳过回车换行
             pos--;
+            //此时，pos指向的数据已经指向第一个有效数据了，后面可以开始进行解析的工作了，有可能已经从socket中读取了多次了
 
             parsingRequestLineStart = pos;
             parsingRequestLinePhase = 2;
@@ -349,7 +353,7 @@ public abstract class AbstractNioInputBuffer<S> extends AbstractInputBuffer<S> {
     }
 
     protected void expand(int newsize) {
-        if ( newsize > buf.length ) {
+        if ( newsize > buf.length ) {//先检验是否需要扩容
             if (parsingHeader) {
                 throw new IllegalArgumentException(
                         sm.getString("iib.requestheadertoolarge.error"));

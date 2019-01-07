@@ -100,10 +100,16 @@ public class InternalNioInputBuffer extends AbstractNioInputBuffer<NioChannel> {
             buf = new byte[bufLength];
         }
 
-        pool = ((NioEndpoint)endpoint).getSelectorPool();
+        pool = ((NioEndpoint)endpoint).getSelectorPool();//初始化Selector池
     }
 
-
+    /**
+     * 读取数据到缓冲区，并把数据填充到buf（如果有需要，对byte[] buf扩容）
+     * @param block true阻塞式读取
+     * @return 成功读取到数据
+     * @throws IOException
+     * @throws EOFException
+     */
     @Override
     protected boolean fill(boolean block) throws IOException, EOFException {
         if (parsingHeader) {
@@ -115,12 +121,12 @@ public class InternalNioInputBuffer extends AbstractNioInputBuffer<NioChannel> {
             lastValid = pos = end;
         }
         int nRead = 0;
-        ByteBuffer readBuffer = socket.getBufHandler().getReadBuffer();
-        readBuffer.clear();
-        if ( block ) {
+        ByteBuffer readBuffer = socket.getBufHandler().getReadBuffer();//得到与socket绑定的缓冲区
+        readBuffer.clear();//先清空缓冲区
+        if ( block ) {//阻塞的方式去读取数据
             Selector selector = null;
             try {
-                selector = pool.get();
+                selector = pool.get();//从selector池中获取selector
             } catch ( IOException x ) {
                 // Ignore
             }
@@ -139,14 +145,15 @@ public class InternalNioInputBuffer extends AbstractNioInputBuffer<NioChannel> {
                 if ( selector != null ) pool.put(selector);
             }
         } else {
-            nRead = socket.read(readBuffer);
+            nRead = socket.read(readBuffer);//从socket中读取数据，读满缓冲区readBuffer
         }
-        if (nRead > 0) {
+        if (nRead > 0) {//读取到了数据，则进入读模式
             readBuffer.flip();
-            readBuffer.limit(nRead);
-            expand(nRead + pos);
-            readBuffer.get(buf, pos, nRead);
+            readBuffer.limit(nRead);//为何要把limit设置成读取到的数据长度？
+            expand(nRead + pos);//检验是否需要扩容，是则扩充当前已读取到数据的容量，用来存放从readBuffer中读取到的新数据
+            readBuffer.get(buf, pos, nRead);//把数据写入buf数组
             lastValid = pos + nRead;
+            //注意：fill过程，pos的值没有发生变化，只是把内容填充，并没有让pos游标移动
         } else if (nRead == -1) {
             //return false;
             throw new EOFException(sm.getString("iib.eof.error"));

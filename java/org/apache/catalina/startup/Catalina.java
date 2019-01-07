@@ -751,7 +751,7 @@ public class Catalina {
 
     protected void initStreams() {
         // Replace System.out and System.err with a custom PrintStream
-        System.setOut(new SystemLogHandler(System.out));
+        System.setOut(new SystemLogHandler(System.out));//使用自定义的控制台IO流
         System.setErr(new SystemLogHandler(System.err));
     }
 

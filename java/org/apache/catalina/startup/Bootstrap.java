@@ -255,7 +255,7 @@ public final class Bootstrap {
 
         initClassLoaders();
 
-        Thread.currentThread().setContextClassLoader(catalinaLoader);
+        Thread.currentThread().setContextClassLoader(catalinaLoader);//设置类上下文加载器为catalinaLoader
 
         SecurityClassLoad.securityClassLoad(catalinaLoader);
 
@@ -291,7 +291,7 @@ public final class Bootstrap {
         throws Exception {
 
         // Call the load() method
-        String methodName = "load";
+        String methodName = "load";//加载load方法
         Object param[];
         Class<?> paramTypes[];
         if (arguments==null || arguments.length==0) {
@@ -307,7 +307,7 @@ public final class Bootstrap {
             catalinaDaemon.getClass().getMethod(methodName, paramTypes);
         if (log.isDebugEnabled())
             log.debug("Calling startup class " + method);
-        method.invoke(catalinaDaemon, param);
+        method.invoke(catalinaDaemon, param);//调用catalinaDaemon的load方法
 
     }
 

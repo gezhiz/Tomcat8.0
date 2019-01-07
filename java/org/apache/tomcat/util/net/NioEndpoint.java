@@ -548,7 +548,7 @@ public class NioEndpoint extends AbstractEndpoint<NioChannel> {
             //disable blocking, APR style, we are gonna be polling it
             socket.configureBlocking(false);
             Socket sock = socket.socket();
-            socketProperties.setProperties(sock);
+            socketProperties.setProperties(sock);//设置socket内部的一些属性
 
             NioChannel channel = nioChannels.pop();
             if ( channel == null ) {
@@ -561,7 +561,7 @@ public class NioEndpoint extends AbstractEndpoint<NioChannel> {
                                                                        socketProperties.getDirectBuffer());
                     channel = new SecureNioChannel(socket, engine, bufhandler, selectorPool);
                 } else {
-                    // normal tcp setup
+                    // normal tcp setup  正常的tcp请求（非ssl），使用NioChannel
                     NioBufferHandler bufhandler = new NioBufferHandler(socketProperties.getAppReadBufSize(),
                                                                        socketProperties.getAppWriteBufSize(),
                                                                        socketProperties.getDirectBuffer());
@@ -806,7 +806,7 @@ public class NioEndpoint extends AbstractEndpoint<NioChannel> {
                 } catch (Exception x) {
                     log.error("", x);
                 }
-            } else {
+            } else {//此时的socket已经注册上Pooler线程了，交给已注册上的poller线程的selector处理
                 final SelectionKey key = socket.getIOChannel().keyFor(socket.getPoller().getSelector());//获取selectionKey
                 try {
                     if (key == null) {
@@ -1499,7 +1499,7 @@ public class NioEndpoint extends AbstractEndpoint<NioChannel> {
             SelectionKey key = socket.getIOChannel().keyFor(socket.getPoller().getSelector());
 
             try {
-                int handshake = -1;
+                int handshake = -1;//握手次数
 
                 try {
                     if (key != null) {
@@ -1507,7 +1507,7 @@ public class NioEndpoint extends AbstractEndpoint<NioChannel> {
                         // Poller has been stopped.
                         if (socket.isHandshakeComplete() ||
                                 status == SocketStatus.STOP) {
-                            handshake = 0;
+                            handshake = 0;//握手成功或者socket已经关闭
                         } else {
                             //todo 三次握手？为何要调用这个
                             handshake = socket.handshake(
@@ -1542,7 +1542,7 @@ public class NioEndpoint extends AbstractEndpoint<NioChannel> {
                 } else if (handshake == -1 ) {
                     close(socket, key, SocketStatus.DISCONNECT);
                 } else {
-                    ka.getPoller().add(socket,handshake);
+                    ka.getPoller().add(socket,handshake);//重新注册事件
                 }
             } catch (CancelledKeyException cx) {
                 socket.getPoller().cancelledKey(key, null);
