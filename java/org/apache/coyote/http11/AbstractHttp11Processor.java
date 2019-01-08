@@ -1003,6 +1003,7 @@ public abstract class AbstractHttp11Processor<S> extends AbstractProcessor<S> {
             socketWrapper.setKeepAliveLeft(0);
         }
 
+        // NIO，在一个循环中取解析socket的数据，防止socket未准备好发生中断，所以再解析过程中需要保存好解析现场，记录当前解析到哪一步
         while (!getErrorState().isError() && keepAlive && !comet && !isAsync() &&
                 upgradeToken == null && !endpoint.isPaused()) {
 
@@ -1069,9 +1070,10 @@ public abstract class AbstractHttp11Processor<S> extends AbstractProcessor<S> {
 
             if (!getErrorState().isError()) {
                 // Setting up filters, and parse some request headers
+                // 设置过滤器，并且解析一些请求头
                 rp.setStage(org.apache.coyote.Constants.STAGE_PREPARE);
                 try {
-                    prepareRequest();
+                    prepareRequest();//处理过滤器
                 } catch (Throwable t) {
                     ExceptionUtils.handleThrowable(t);
                     if (getLog().isDebugEnabled()) {
@@ -1260,7 +1262,7 @@ public abstract class AbstractHttp11Processor<S> extends AbstractProcessor<S> {
             }
         }
 
-        MessageBytes methodMB = request.method();//请求方式
+        MessageBytes methodMB = request.method();//设置请求方式的string值
         if (methodMB.equals(Constants.GET)) {
             methodMB.setString(Constants.GET);
         } else if (methodMB.equals(Constants.POST)) {
@@ -1311,6 +1313,7 @@ public abstract class AbstractHttp11Processor<S> extends AbstractProcessor<S> {
         }
 
         // Check for a full URI (including protocol://host:port/)
+        // 预处理uri
         ByteChunk uriBC = request.requestURI().getByteChunk();
         if (uriBC.startsWithIgnoreCase("http", 0)) {
 

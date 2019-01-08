@@ -62,7 +62,7 @@ public abstract class AbstractNioInputBuffer<S> extends AbstractInputBuffer<S> {
          * either HEADER_VALUE_START (if that first byte is SP or HT), or
          * HEADER_START (otherwise).
          */
-        HEADER_MULTI_LINE,
+        HEADER_MULTI_LINE,//用来判定是否多行请求头
         /**
          * Reading all bytes until the next CRLF. The line is being ignored.
          */
@@ -110,12 +110,14 @@ public abstract class AbstractNioInputBuffer<S> extends AbstractInputBuffer<S> {
     private HeaderParsePosition headerParsePos;
 
     /**
+     * 最大byte数：请求行+请求头+空行
      * Maximum allowed size of the HTTP request line plus headers plus any
      * leading blank lines.
      */
     protected final int headerBufferSize;
 
     /**
+     * NioChannel的缓冲区长度
      * Known size of the NioChannel read buffer.
      */
     protected int socketReadBufferSize;
@@ -215,8 +217,10 @@ public abstract class AbstractNioInputBuffer<S> extends AbstractInputBuffer<S> {
                         + "]");
             }
         }
+        //pos已经移动到第一个有效数据
         if ( parsingRequestLinePhase == 2 ) {
             //
+            // 读取请求方法
             // Reading the method name
             // Method name is a token
             //
@@ -224,7 +228,7 @@ public abstract class AbstractNioInputBuffer<S> extends AbstractInputBuffer<S> {
             while (!space) {
                 // Read new bytes if needed
                 if (pos >= lastValid) {
-                    if (!fill(false)) //request line parsing
+                    if (!fill(false)) //request line parsing 继续填充数据
                         return false;
                 }
                 // Spec says method name is a token followed by a single SP but
@@ -235,11 +239,12 @@ public abstract class AbstractNioInputBuffer<S> extends AbstractInputBuffer<S> {
                 } else if (!HTTP_TOKEN_CHAR[buf[pos]]) {
                     throw new IllegalArgumentException(sm.getString("iib.invalidmethod"));
                 }
-                pos++;
+                pos++;//pos后移，直到读取到空格
             }
             parsingRequestLinePhase = 3;
         }
         if ( parsingRequestLinePhase == 3 ) {
+            //跳过更多的空格，制表符
             // Spec says single SP but also be tolerant of multiple SP and/or HT
             boolean space = true;
             while (space) {
@@ -263,6 +268,7 @@ public abstract class AbstractNioInputBuffer<S> extends AbstractInputBuffer<S> {
             int end = 0;
             //
             // Reading the URI
+            // 读取URI
             //
             boolean space = false;
             while (!space) {
@@ -295,6 +301,7 @@ public abstract class AbstractNioInputBuffer<S> extends AbstractInputBuffer<S> {
             }
             parsingRequestLinePhase = 5;
         }
+        //去除更多的空格和制表符
         if ( parsingRequestLinePhase == 5 ) {
             // Spec says single SP but also be tolerant of multiple and/or HT
             boolean space = true;
@@ -316,6 +323,7 @@ public abstract class AbstractNioInputBuffer<S> extends AbstractInputBuffer<S> {
             // Mark the current buffer position
             end = 0;
         }
+        // 解析请求协议
         if (parsingRequestLinePhase == 6) {
             //
             // Reading the protocol
@@ -339,6 +347,7 @@ public abstract class AbstractNioInputBuffer<S> extends AbstractInputBuffer<S> {
             }
 
             if ( (end - parsingRequestLineStart) > 0) {
+                //把数据单独抠出来放到MessageBytes中
                 request.protocol().setBytes(buf, parsingRequestLineStart, end - parsingRequestLineStart);
             } else {
                 request.protocol().setString("");
@@ -397,8 +406,8 @@ public abstract class AbstractNioInputBuffer<S> extends AbstractInputBuffer<S> {
             }
         } while ( status == HeaderParseStatus.HAVE_MORE_HEADERS );
         if (status == HeaderParseStatus.DONE) {
-            parsingHeader = false;
-            end = pos;
+            parsingHeader = false;//解析完毕，标记不需要再解析请求头了
+            end = pos;//记录请求头的结束
             return true;
         } else {
             return false;
@@ -419,9 +428,11 @@ public abstract class AbstractNioInputBuffer<S> extends AbstractInputBuffer<S> {
         //
 
         byte chr = 0;
+        //headerParsePos记录当前读取的请求头的位置 默认是HEADER_START
         while (headerParsePos == HeaderParsePosition.HEADER_START) {
 
             // Read new bytes if needed
+            //读取更多的数据
             if (pos >= lastValid) {
                 if (!fill(false)) {//parse header
                     headerParsePos = HeaderParsePosition.HEADER_START;
@@ -431,13 +442,17 @@ public abstract class AbstractNioInputBuffer<S> extends AbstractInputBuffer<S> {
 
             chr = buf[pos];
 
+
             if (chr == Constants.CR) {
+                //忽略回车符
                 // Skip
             } else if (chr == Constants.LF) {
                 pos++;
+                //以换行符'\n'行开头，作为请求头读取的结束
                 return HeaderParseStatus.DONE;
             } else {
                 break;
+                //不是回车换行，证明可以开始读取请求头的name了
             }
 
             pos++;
@@ -447,11 +462,11 @@ public abstract class AbstractNioInputBuffer<S> extends AbstractInputBuffer<S> {
         if ( headerParsePos == HeaderParsePosition.HEADER_START ) {
             // Mark the current buffer position
             headerData.start = pos;
-            headerParsePos = HeaderParsePosition.HEADER_NAME;
+            headerParsePos = HeaderParsePosition.HEADER_NAME;//标记当前解析的状态为HEADER_NAME
         }
 
         //
-        // Reading the header name
+        // Reading the header name 解析请求头的name
         // Header name is always US-ASCII
         //
 
@@ -466,13 +481,14 @@ public abstract class AbstractNioInputBuffer<S> extends AbstractInputBuffer<S> {
 
             chr = buf[pos];
             if (chr == Constants.COLON) {
+                //如果是冒号':'，表示key已经读取完成，已经开始解析请求头的值
                 headerParsePos = HeaderParsePosition.HEADER_VALUE_START;
+                //使用未转化的字节数组创建新的header
                 headerData.headerValue = headers.addValue(buf, headerData.start, pos - headerData.start);
                 pos++;
                 // Mark the current buffer position
-                headerData.start = pos;
-                headerData.realPos = pos;
-                headerData.lastSignificantChar = pos;
+                headerData.start = pos;//记录headerValue的开始
+                headerData.lastSignificantChar = pos;//记录headerValue的当前位置
                 break;
             } else if (chr < 0 || !HTTP_TOKEN_CHAR[chr]) {
                 // If a non-token header is detected, skip the line and
@@ -496,7 +512,7 @@ public abstract class AbstractNioInputBuffer<S> extends AbstractInputBuffer<S> {
         //
         // Reading the header value (which can be spanned over multiple lines)
         //
-
+        // headerParsePos 作为是否继续读取的标记
         while (headerParsePos == HeaderParsePosition.HEADER_VALUE_START ||
                headerParsePos == HeaderParsePosition.HEADER_VALUE ||
                headerParsePos == HeaderParsePosition.HEADER_MULTI_LINE) {
@@ -514,16 +530,17 @@ public abstract class AbstractNioInputBuffer<S> extends AbstractInputBuffer<S> {
 
                     chr = buf[pos];
                     if (chr == Constants.SP || chr == Constants.HT) {
-                        pos++;
+                        pos++;//跳过空格和制表符
                     } else {
                         headerParsePos = HeaderParsePosition.HEADER_VALUE;
                         break;
                     }
                 }
             }
+            //开始读取headValue
             if ( headerParsePos == HeaderParsePosition.HEADER_VALUE ) {
 
-                // Reading bytes until the end of the line
+                // Reading bytes until the end of the line 读取一整行的数据
                 boolean eol = false;
                 while (!eol) {
 
@@ -537,27 +554,27 @@ public abstract class AbstractNioInputBuffer<S> extends AbstractInputBuffer<S> {
 
                     chr = buf[pos];
                     if (chr == Constants.CR) {
-                        // Skip
+                        // Skip  跳过回车
                     } else if (chr == Constants.LF) {
-                        eol = true;
+                        eol = true;//换行：作为结束标志
                     } else if (chr == Constants.SP || chr == Constants.HT) {
-                        buf[headerData.realPos] = chr;
-                        headerData.realPos++;
+                        buf[headerData.realPos] = chr;//把数据缓存的到buf
+                        headerData.realPos++;//记录真实读取过程的位置
                     } else {
                         buf[headerData.realPos] = chr;
                         headerData.realPos++;
-                        headerData.lastSignificantChar = headerData.realPos;
+                        headerData.lastSignificantChar = headerData.realPos;//只有非空格和制表符才统计
                     }
 
                     pos++;
                 }
 
                 // Ignore whitespaces at the end of the line
-                headerData.realPos = headerData.lastSignificantChar;
+                headerData.realPos = headerData.lastSignificantChar;//读取一段headValue完毕后，把realPos指针移回真实数据的位置
 
                 // Checking the first character of the new line. If the character
                 // is a LWS, then it's a multiline header
-                headerParsePos = HeaderParsePosition.HEADER_MULTI_LINE;
+                headerParsePos = HeaderParsePosition.HEADER_MULTI_LINE;//标记：需要读取下一行第一个字符，判定当前是否是多行请求头
             }
             // Read new bytes if needed
             if (pos >= lastValid) {
@@ -567,21 +584,30 @@ public abstract class AbstractNioInputBuffer<S> extends AbstractInputBuffer<S> {
                 }
             }
 
-            chr = buf[pos];
+            /**
+             * 引用https://www.w3.org/Protocols/rfc2616/rfc2616-sec4.html的一句话
+             * Header fields can be extended over multiple lines by preceding each extra line with at least one SP or HT.
+             * 请求头可以通过在多余行的前面放置至少一个空格或制表符，从而扩展多行。
+             */
+
+            chr = buf[pos];//读取下一行第一个字符
             if ( headerParsePos == HeaderParsePosition.HEADER_MULTI_LINE ) {
+                //在读取完成一行之后，继续校验后面的数据是否还属于当前的headerName
                 if ( (chr != Constants.SP) && (chr != Constants.HT)) {
+                    //遇到非空格和非制表符，则表示无更多行headerValue需要读取，跳出headerValue读取循环
                     headerParsePos = HeaderParsePosition.HEADER_START;
                     break;
                 } else {
+                    //下一行的开头是空格或者制表符：是多行数据
                     // Copying one extra space in the buffer (since there must
                     // be at least one space inserted between the lines)
-                    buf[headerData.realPos] = chr;
+                    buf[headerData.realPos] = chr;//拷贝1byte的数据到buf，准备读取下一行数据
                     headerData.realPos++;
-                    headerParsePos = HeaderParsePosition.HEADER_VALUE_START;
+                    headerParsePos = HeaderParsePosition.HEADER_VALUE_START;//继续读取headerValue
                 }
             }
         }
-        // Set the header value
+        // Set the header value 把具体的缓冲区的值设置进去
         headerData.headerValue.setBytes(buf, headerData.start,
                 headerData.lastSignificantChar - headerData.start);
         headerData.recycle();
@@ -627,7 +653,7 @@ public abstract class AbstractNioInputBuffer<S> extends AbstractInputBuffer<S> {
         return HeaderParseStatus.HAVE_MORE_HEADERS;
     }
 
-    private final HeaderParseData headerData = new HeaderParseData();
+    private final HeaderParseData headerData = new HeaderParseData();//记录当前正在解析的请求头信息：（请求方法，请求头，要跳过的请求行）
     public static class HeaderParseData {
         /**
          * When parsing header name: first character of the header.<br>
@@ -644,13 +670,13 @@ public abstract class AbstractNioInputBuffer<S> extends AbstractInputBuffer<S> {
          * [start] to [realPos-1] is the prepared value of the header, with
          * whitespaces removed as needed.<br>
          */
-        int realPos = 0;
+        int realPos = 0;//读取headValue时使用：记录读取过程中的真实位置（遇到空格和制表符需要统计）
         /**
          * When parsing header name: not used (stays as 0).<br>
          * When skipping broken header line: last non-CR/non-LF character.<br>
          * When parsing header value: position after the last not-LWS character.<br>
          */
-        int lastSignificantChar = 0;
+        int lastSignificantChar = 0;//读取headValue时使用：记录最后一次读取到的真实数据的位置（遇到空格和制表符不统计）
         /**
          * MB that will store the value of the header. It is null while parsing
          * header name and is created after the name has been parsed.

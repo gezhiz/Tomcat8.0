@@ -23,6 +23,7 @@ import java.nio.charset.Charset;
 import java.util.Locale;
 
 /**
+ * 存放解析后的请求数据的核心类
  * This class is used to represent a subarray of bytes in an HTTP message.
  * It represents all request/response elements. The byte/char conversions are
  * delayed and cached. Everything is recyclable.

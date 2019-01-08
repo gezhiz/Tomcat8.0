@@ -101,6 +101,8 @@ public abstract class AbstractInputBuffer<S> implements InputBuffer{
 
 
     /**
+     * true表示需要解析请求头
+     * false表示请求头解析完成
      * State.
      */
     protected boolean parsingHeader;
@@ -135,6 +137,7 @@ public abstract class AbstractInputBuffer<S> implements InputBuffer{
     /**
      * Pos of the end of the header in the buffer, which is also the
      * start of the body.
+     * buf数组中请求头的结束，请求体的开始
      */
     protected int end;
 

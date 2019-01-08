@@ -520,12 +520,12 @@ public class CoyoteAdapter implements Adapter {
             // Parse and set Catalina and configuration specific
             // request parameters
             req.getRequestProcessor().setWorkerThreadName(THREAD_NAME.get());
-            postParseSuccess = postParseRequest(req, request, res, response);
+            postParseSuccess = postParseRequest(req, request, res, response);//解析post请求的请求头
             if (postParseSuccess) {
                 //check valves if we support async
                 request.setAsyncSupported(connector.getService().getContainer().getPipeline().isAsyncSupported());
                 // Calling the container
-                connector.getService().getContainer().getPipeline().getFirst().invoke(request, response);
+                connector.getService().getContainer().getPipeline().getFirst().invoke(request, response);//启动容器的责任链
 
                 if (request.isComet()) {
                     if (!response.isClosed() && !response.isError()) {

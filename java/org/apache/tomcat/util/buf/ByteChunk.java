@@ -60,6 +60,7 @@ import java.nio.charset.StandardCharsets;
  * are needed. In addition, the charset is determined later, from headers or
  * user code.
  *
+ * 字节块，用来存放字节缓冲
  * @author dac@sun.com
  * @author James Todd [gonzo@sun.com]
  * @author Costin Manolache
@@ -519,6 +520,7 @@ public final class ByteChunk implements Cloneable, Serializable {
     }
 
     /**
+     * 比较缓冲区的内容是否和字符串s相同
      * Compares the message bytes to the specified String object.
      * @param s the String to compare
      * @return true if the comparison succeeded, false otherwise

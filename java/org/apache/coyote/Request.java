@@ -31,6 +31,7 @@ import org.apache.tomcat.util.http.ServerCookies;
 import org.apache.tomcat.util.res.StringManager;
 
 /**
+ * 存放了大量MessageBytes对象，以byte[]形式存储从SocketChannel解析到的请求行，请求头，请求参数
  * This is a low-level, efficient representation of a server request. Most
  * fields are GC-free, expensive operations are delayed until the  user code
  * needs the information.
