@@ -60,6 +60,7 @@ public class StandardThreadExecutor extends LifecycleMBeanBase
 
     /**
      * idle time in milliseconds
+     * keepAliveTime 最大空闲时间
      */
     protected int maxIdleTime = 60000;
 
@@ -75,6 +76,7 @@ public class StandardThreadExecutor extends LifecycleMBeanBase
 
     /**
      * prestart threads?
+     * 是否预加载核心线程
      */
     protected boolean prestartminSpareThreads = false;
 
@@ -87,6 +89,7 @@ public class StandardThreadExecutor extends LifecycleMBeanBase
      * After a context is stopped, threads in the pool are renewed. To avoid
      * renewing all threads at the same time, this delay is observed between 2
      * threads being renewed.
+     * 工程容器（context）停止以后，线程池内的线程可能会重新创建，用这个参数控制线程重新创建的延迟
      */
     protected long threadRenewalDelay =
         org.apache.tomcat.util.threads.Constants.DEFAULT_THREAD_RENEWAL_DELAY;

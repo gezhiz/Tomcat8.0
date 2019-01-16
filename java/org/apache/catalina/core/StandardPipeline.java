@@ -350,7 +350,7 @@ public class StandardPipeline extends LifecycleBase
             while (current != null) {
                 if (current.getNext() == basic) {
                     current.setNext(valve);
-                    valve.setNext(basic);
+                    valve.setNext(basic);//遇到基础阀门，则退出循环：基础阀门就是最后一个阀门
                     break;
                 }
                 current = current.getNext();

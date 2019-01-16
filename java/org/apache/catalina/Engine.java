@@ -40,6 +40,15 @@ package org.apache.catalina;
  * hierarchy. Therefore, the implementation's <code>setParent()</code> method
  * should throw <code>IllegalArgumentException</code>.
  *
+ *      Engine是一个Container容器，代表整个Catalina的servlet引擎，一下两个场景会使用到Engine容器：
+ *  你希望对每一个请求的处理添加拦截器的时候；你希望运行Catalina时，使用一个单独的Http Connector 去支持多个虚拟主机
+ *
+ *      一般情况下，当你部署一个与web服务器连接（例如Apache服务器）的Catalina时不会使用Engine，
+ * 因为Connecto 将会使用这个web服务器的组件去决定使用哪个Context区处理请求
+ *
+ *      通常情况下,在Catalina的架构中，如果使用到了Engine，他就是最顶层的Container，所以Engine
+ * 的setParent()方法应该抛出IllegalArgumentException
+ *
  * @author Craig R. McClanahan
  */
 public interface Engine extends Container {

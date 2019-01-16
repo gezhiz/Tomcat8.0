@@ -58,7 +58,7 @@ public abstract class LifecycleMBeanBase extends LifecycleBase
         if (oname == null) {
             mserver = Registry.getRegistry(null, null).getMBeanServer();
 
-            oname = register(this, getObjectNameKeyProperties());
+            oname = register(this, getObjectNameKeyProperties());//注册到MBServer
         }
     }
 
@@ -158,7 +158,7 @@ public abstract class LifecycleMBeanBase extends LifecycleBase
         try {
             on = new ObjectName(name.toString());
 
-            Registry.getRegistry(null, null).registerComponent(obj, on, null);
+            Registry.getRegistry(null, null).registerComponent(obj, on, null);//注册到MBServer
         } catch (MalformedObjectNameException e) {
             log.warn(sm.getString("lifecycleMBeanBase.registerFail", obj, name),
                     e);
@@ -232,6 +232,7 @@ public abstract class LifecycleMBeanBase extends LifecycleBase
 
 
     /**
+     * LifecycleMBeanBase提供了一套默认的MBean注册方法，如果不使用这套默认的MBean注册，则客户调用preRegister
      * Allows the object to be registered with an alternative
      * {@link MBeanServer} and/or {@link ObjectName}.
      */

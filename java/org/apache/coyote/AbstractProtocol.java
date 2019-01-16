@@ -570,10 +570,10 @@ public abstract class AbstractProtocol<S> implements ProtocolHandler,
         protected final RequestGroupInfo global = new RequestGroupInfo();
         protected final AtomicLong registerCount = new AtomicLong(0);
 
-        protected final Map<S,Processor<S>> connections = new ConcurrentHashMap<>();
+        protected final Map<S,Processor<S>> connections = new ConcurrentHashMap<>();//记录了所有的processor,可以通过socket找到processor
 
         protected final RecycledProcessors<P,S> recycledProcessors =
-                new RecycledProcessors<>(this);
+                new RecycledProcessors<>(this);//空闲的processor
 
 
         protected abstract AbstractProtocol<S> getProtocol();

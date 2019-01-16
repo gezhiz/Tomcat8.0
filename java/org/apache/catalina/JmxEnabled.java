@@ -24,6 +24,9 @@ import javax.management.ObjectName;
  * MBean server when they are created and unregistered when they are destroyed.
  * It is primarily intended to be implemented by components that implement
  * {@link Lifecycle} but is not exclusively for them.
+ *
+ * 实现这个接口的组件，将会在初始化时被注册到一个MBean server，停止时被unregister.
+ * 主要目的是给实现了Lifecycle接口的组件使用，但不是唯一的方式。
  */
 public interface JmxEnabled extends MBeanRegistration {
 

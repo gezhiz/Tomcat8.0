@@ -428,6 +428,7 @@ public class Registry implements RegistryMBean, MBeanRegistration  {
     /**
      * Factory method to create (if necessary) and return our
      * <code>MBeanServer</code> instance.
+     * 创建或者获取MBServer
      *
      */
     public synchronized MBeanServer getMBeanServer() {

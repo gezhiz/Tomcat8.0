@@ -489,6 +489,7 @@ public class CoyoteAdapter implements Adapter {
         if (request == null) {
 
             // Create objects
+            //创建servlet的request，response
             request = connector.createRequest();
             request.setCoyoteRequest(req);
             response = connector.createResponse();
@@ -509,7 +510,7 @@ public class CoyoteAdapter implements Adapter {
         }
 
         if (connector.getXpoweredBy()) {
-            response.addHeader("X-Powered-By", POWERED_BY);
+            response.addHeader("X-Powered-By", POWERED_BY);//添加请求头，servlet协议编号
         }
 
         boolean comet = false;
@@ -519,13 +520,14 @@ public class CoyoteAdapter implements Adapter {
         try {
             // Parse and set Catalina and configuration specific
             // request parameters
-            req.getRequestProcessor().setWorkerThreadName(THREAD_NAME.get());
-            postParseSuccess = postParseRequest(req, request, res, response);//解析post请求的请求头
+            req.getRequestProcessor().setWorkerThreadName(THREAD_NAME.get());//设置请求信息：当前线程名称
+            postParseSuccess = postParseRequest(req, request, res, response);//再次解析请求
             if (postParseSuccess) {
+                //成功解析了post请求
                 //check valves if we support async
                 request.setAsyncSupported(connector.getService().getContainer().getPipeline().isAsyncSupported());
                 // Calling the container
-                connector.getService().getContainer().getPipeline().getFirst().invoke(request, response);//启动容器的责任链
+                connector.getService().getContainer().getPipeline().getFirst().invoke(request, response);//启动容器的责任链，把请求交给container处理
 
                 if (request.isComet()) {
                     if (!response.isClosed() && !response.isError()) {
@@ -544,6 +546,7 @@ public class CoyoteAdapter implements Adapter {
             }
 
             if (request.isAsync()) {
+                //异步请求
                 async = true;
                 ReadListener readListener = req.getReadListener();
                 if (readListener != null && request.isFinished()) {
@@ -774,6 +777,7 @@ public class CoyoteAdapter implements Adapter {
         // If the processor has set the scheme (AJP will do this) use this to
         // set the secure flag as well. If the processor hasn't set it, use the
         // settings from the connector
+        //设定是否是ssl安全请求
         if (! req.scheme().isNull()) {
             // use processor specified scheme to determine secure state
             request.setSecure(req.scheme().equals("https"));
@@ -820,19 +824,20 @@ public class CoyoteAdapter implements Adapter {
 
         MessageBytes decodedURI = req.decodedURI();
 
+        //uri是byte类型的数据
         if (undecodedURI.getType() == MessageBytes.T_BYTES) {
             // Copy the raw URI to the decodedURI
-            decodedURI.duplicate(undecodedURI);
+            decodedURI.duplicate(undecodedURI);//把uri拷贝到decodeURI 开始对uri进行编码解析，undecodedURI是byte[]类型的数据，需要编码成字符类型
 
             // Parse the path parameters. This will:
             //   - strip out the path parameters
             //   - convert the decodedURI to bytes
-            parsePathParameters(req, request);
+            parsePathParameters(req, request);//解析uri上的请求参数
 
             // URI decoding
             // %xx decoding of the URL
             try {
-                req.getURLDecoder().convert(decodedURI, false);
+                req.getURLDecoder().convert(decodedURI, false);//进行url编码
             } catch (IOException ioe) {
                 res.setStatus(400);
                 res.setMessage("Invalid URI: " + ioe.getMessage());
@@ -840,7 +845,7 @@ public class CoyoteAdapter implements Adapter {
                         request, response, 0, true);
                 return false;
             }
-            // Normalization
+            // Normalization  uri标准化
             if (!normalize(req.decodedURI())) {
                 res.setStatus(400);
                 res.setMessage("Invalid URI");
@@ -848,7 +853,7 @@ public class CoyoteAdapter implements Adapter {
                         request, response, 0, true);
                 return false;
             }
-            // Character decoding
+            // Character decoding  字符编码
             convertURI(decodedURI, request);
             // Check that the URI is still normalized
             if (!checkNormalize(req.decodedURI())) {
@@ -859,6 +864,7 @@ public class CoyoteAdapter implements Adapter {
                 return false;
             }
         } else {
+            //连接之前已经建立过了
             /* The URI is chars or String, and has been sent using an in-memory
              * protocol handler. The following assumptions are made:
              * - req.requestURI() has been set to the 'original' non-decoded,
@@ -896,6 +902,7 @@ public class CoyoteAdapter implements Adapter {
         boolean mapRequired = true;
 
         while (mapRequired) {
+            //匹配上servlet
             // This will map the the latest version by default
             connector.getService().getMapper().map(serverName, decodedURI,
                     version, request.getMappingData());
@@ -932,7 +939,7 @@ public class CoyoteAdapter implements Adapter {
             }
 
             // Look for session ID in cookies and SSL session
-            parseSessionCookiesId(request);
+            parseSessionCookiesId(request);//解析session和cookie
             parseSessionSslId(request);
 
             sessionID = request.getRequestedSessionId();
@@ -1088,6 +1095,7 @@ public class CoyoteAdapter implements Adapter {
 
 
     /**
+     * 解析uri中的请求参数
      * Extract the path parameters from the request. This assumes parameters are
      * of the form /path;name=value;name2=value2/ etc. Currently only really
      * interested in the session ID that will be in this form. Other parameters
@@ -1173,7 +1181,7 @@ public class CoyoteAdapter implements Adapter {
                 if (equals > -1) {
                     String name = pv.substring(0, equals);
                     String value = pv.substring(equals + 1);
-                    request.addPathParameter(name, value);
+                    request.addPathParameter(name, value);//把解析到的参数添加到pathParameter
                     if (log.isDebugEnabled()) {
                         log.debug(sm.getString("coyoteAdapter.debug", "equals",
                                 String.valueOf(equals)));

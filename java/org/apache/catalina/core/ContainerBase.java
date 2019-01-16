@@ -196,7 +196,7 @@ public abstract class ContainerBase extends LifecycleMBeanBase
      * The cluster with which this Container is associated.
      */
     protected Cluster cluster = null;
-    private final ReadWriteLock clusterLock = new ReentrantReadWriteLock();
+    private final ReadWriteLock clusterLock = new ReentrantReadWriteLock();//集群锁
 
 
     /**
@@ -232,7 +232,7 @@ public abstract class ContainerBase extends LifecycleMBeanBase
     /**
      * Lock used to control access to the Realm.
      */
-    private final ReadWriteLock realmLock = new ReentrantReadWriteLock();
+    private final ReadWriteLock realmLock = new ReentrantReadWriteLock();//读写锁，控制realm
 
 
     /**
