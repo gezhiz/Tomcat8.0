@@ -16,17 +16,16 @@
  */
 package org.apache.catalina.core;
 
-import java.io.IOException;
-
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletResponse;
-
 import org.apache.catalina.Host;
 import org.apache.catalina.comet.CometEvent;
 import org.apache.catalina.connector.Request;
 import org.apache.catalina.connector.Response;
 import org.apache.catalina.valves.ValveBase;
 import org.apache.tomcat.util.res.StringManager;
+
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
 
 /**
  * Valve that implements the default basic behavior for the
@@ -72,8 +71,10 @@ final class StandardEngineValve extends ValveBase {
         throws IOException, ServletException {
 
         // Select the Host to be used for this Request
+        //从request中获取请求的主机
         Host host = request.getHost();
         if (host == null) {
+            //未定位到主机，则返回错误信息,400错误
             response.sendError
                 (HttpServletResponse.SC_BAD_REQUEST,
                  sm.getString("standardEngine.noHost",
@@ -85,6 +86,7 @@ final class StandardEngineValve extends ValveBase {
         }
 
         // Ask this Host to process this request
+        //调用请求链
         host.getPipeline().getFirst().invoke(request, response);
 
     }

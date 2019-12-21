@@ -17,20 +17,7 @@
 package org.apache.catalina.core;
 
 
-import java.beans.PropertyChangeListener;
-import java.beans.PropertyChangeSupport;
-import java.util.ArrayList;
-
-import javax.management.ObjectName;
-
-import org.apache.catalina.Container;
-import org.apache.catalina.Engine;
-import org.apache.catalina.Executor;
-import org.apache.catalina.JmxEnabled;
-import org.apache.catalina.LifecycleException;
-import org.apache.catalina.LifecycleState;
-import org.apache.catalina.Server;
-import org.apache.catalina.Service;
+import org.apache.catalina.*;
 import org.apache.catalina.connector.Connector;
 import org.apache.catalina.mapper.Mapper;
 import org.apache.catalina.mapper.MapperListener;
@@ -38,6 +25,11 @@ import org.apache.catalina.util.LifecycleMBeanBase;
 import org.apache.juli.logging.Log;
 import org.apache.juli.logging.LogFactory;
 import org.apache.tomcat.util.res.StringManager;
+
+import javax.management.ObjectName;
+import java.beans.PropertyChangeListener;
+import java.beans.PropertyChangeSupport;
+import java.util.ArrayList;
 
 
 /**
@@ -85,7 +77,7 @@ public class StandardService extends LifecycleMBeanBase implements Service {
     private final Object connectorsLock = new Object();
 
     /**
-     *
+     * 线程池列表，每个Connector会有一个线程池
      */
     protected final ArrayList<Executor> executors = new ArrayList<>();
 
@@ -434,9 +426,11 @@ public class StandardService extends LifecycleMBeanBase implements Service {
 
         if(log.isInfoEnabled())
             log.info(sm.getString("standardService.start.name", this.name));
+        //触发启动监听事件
         setState(LifecycleState.STARTING);
 
         // Start our defined Container first
+        //县启动engine，engine会启动其他子容器
         if (container != null) {
             synchronized (container) {
                 container.start();
@@ -448,7 +442,7 @@ public class StandardService extends LifecycleMBeanBase implements Service {
                 executor.start();//启动executes的线程池
             }
         }
-
+        //启动mapper监听器
         mapperListener.start();
 
         // Start our defined Connectors second
