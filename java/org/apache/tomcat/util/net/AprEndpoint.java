@@ -1032,6 +1032,7 @@ public class AprEndpoint extends AbstractEndpoint<Long> {
 
     // --------------------------------------------------- Acceptor Inner Class
     /**
+     * 监听来自端口的socket请求，通过调用JNI库来实现
      * The background thread that listens for incoming TCP/IP connections and
      * hands them off to an appropriate processor.
      */

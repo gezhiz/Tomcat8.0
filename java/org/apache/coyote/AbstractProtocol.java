@@ -58,7 +58,7 @@ public abstract class AbstractProtocol<S> implements ProtocolHandler,
 
 
     /**
-     * Counter used to generate unique JMX names for connectors using automatic
+     * Counter used to generate unique JMX names for connectors using automatic7
      * port binding.
      */
     private static final AtomicInteger nameCounter = new AtomicInteger(0);

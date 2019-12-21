@@ -498,6 +498,7 @@ public class Nio2Endpoint extends AbstractEndpoint<Nio2Channel> {
 
 
     /**
+     * 处理接收到的请求
      * Process the specified connection.
      */
     protected boolean setSocketOptions(AsynchronousSocketChannel socket) {
@@ -582,7 +583,12 @@ public class Nio2Endpoint extends AbstractEndpoint<Nio2Channel> {
         return true;
     }
 
-
+    /**
+     * 处理封装的socketWrapper
+     * @param socketWrapper The socket wrapper to process
+     * @param socketStatus  The input status to the processing
+     * @param dispatch      Should the processing be performed on a new
+     */
     @Override
     public void processSocket(SocketWrapper<Nio2Channel> socketWrapper,
             SocketStatus socketStatus, boolean dispatch) {
@@ -594,6 +600,7 @@ public class Nio2Endpoint extends AbstractEndpoint<Nio2Channel> {
             waitingRequests.remove(socketWrapper);
             SocketProcessor sc = (useCaches) ? processorCache.pop() : null;
             if (sc == null) {
+                //生成一个SocketProcessor任务，供异步回调
                 sc = new SocketProcessor(socketWrapper, status);
             } else {
                 sc.reset(socketWrapper, status);
@@ -1087,6 +1094,7 @@ public class Nio2Endpoint extends AbstractEndpoint<Nio2Channel> {
                     SocketState state = SocketState.OPEN;
                     // Process the request from this socket
                     if (status == null) {
+                        //把socket交给 Http11ConnectionHandler 处理
                         state = handler.process(socket, SocketStatus.OPEN_READ);
                     } else {
                         state = handler.process(socket, status);

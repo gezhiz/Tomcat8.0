@@ -20,7 +20,7 @@ import org.apache.tomcat.util.net.SocketStatus;
 
 /**
  * Adapter. This represents the entry point in a coyote-based servlet container.
- *
+ * 用于适配连接器和容器之间的request和response
  *
  * @author Remy Maucherat
  * @see ProtocolHandler
